@@ -1,0 +1,58 @@
+import type { CalendarEvent } from "@/lib/types"
+
+export const calendarEvents: CalendarEvent[] = [
+  {
+    id: "cal-1",
+    type: "deal",
+    title: "Negocio cerrado",
+    description: "Acme Corp • S/ 45,000",
+    date: "2025-09-28",
+    time: "10:30",
+    owner: "Sarah Chen",
+  },
+  {
+    id: "cal-2",
+    type: "meeting",
+    title: "Demo TechStart",
+    description: "Presentación del producto",
+    date: "2025-09-29",
+    time: "14:00",
+    owner: "Michael Torres",
+  },
+  {
+    id: "cal-3",
+    type: "email",
+    title: "Propuesta enviada",
+    description: "Global Systems",
+    date: "2025-09-30",
+    time: "09:15",
+    owner: "Emma Wilson",
+  },
+  {
+    id: "cal-4",
+    type: "call",
+    title: "Seguimiento DataFlow",
+    description: "Implementación en curso",
+    date: "2025-10-01",
+    time: "11:00",
+    owner: "James Park",
+  },
+  {
+    id: "cal-5",
+    type: "deal",
+    title: "Negociación avanzada",
+    description: "CloudScale • S/ 32,000",
+    date: "2025-10-02",
+    time: "15:30",
+    owner: "Sarah Chen",
+  },
+  {
+    id: "cal-6",
+    type: "meeting",
+    title: "Reunión de equipo",
+    description: "Revisión mensual",
+    date: "2025-10-03",
+    time: "10:00",
+    owner: "Equipo Lumen",
+  },
+]

@@ -1,0 +1,136 @@
+import type { Deal, Activity, KPI } from "@/lib/types"
+
+export const kpis: KPI[] = [
+  {
+    label: "Ingresos",
+    value: "S/ 847,392",
+    change: 12.5,
+    trend: "up",
+  },
+  {
+    label: "Negocios Activos",
+    value: 47,
+    change: 8.2,
+    trend: "up",
+  },
+  {
+    label: "Tasa de Conversión",
+    value: "34.2%",
+    change: -2.1,
+    trend: "down",
+  },
+  {
+    label: "Tamaño Promedio",
+    value: "S/ 18,029",
+    change: 5.7,
+    trend: "up",
+  },
+  {
+    label: "Valor del Pipeline",
+    value: "S/ 2.4M",
+    change: 15.3,
+    trend: "up",
+  },
+  {
+    label: "Puntuación NPS",
+    value: 72,
+    change: 3.0,
+    trend: "up",
+  },
+]
+
+export const recentActivities: Activity[] = [
+  {
+    id: "1",
+    type: "deal",
+    title: "Negocio cerrado con Acme Corp",
+    description: "Plan empresarial - S/ 45,000 ARR",
+    timestamp: "hace 2 horas",
+    user: "Sarah Chen",
+  },
+  {
+    id: "2",
+    type: "meeting",
+    title: "Demo programada con TechStart Inc",
+    description: "Demostración del producto para licencia de 50 usuarios",
+    timestamp: "hace 4 horas",
+    user: "Michael Torres",
+  },
+  {
+    id: "3",
+    type: "email",
+    title: "Propuesta enviada a Global Systems",
+    description: "Propuesta de paquete de integración personalizada",
+    timestamp: "hace 6 horas",
+    user: "Emma Wilson",
+  },
+  {
+    id: "4",
+    type: "call",
+    title: "Llamada de seguimiento con DataFlow",
+    description: "Discutimos cronograma de implementación",
+    timestamp: "hace 1 día",
+    user: "James Park",
+  },
+  {
+    id: "5",
+    type: "deal",
+    title: "Negocio movido a negociación",
+    description: "CloudScale Solutions - S/ 32,000",
+    timestamp: "hace 1 día",
+    user: "Sarah Chen",
+  },
+]
+
+export const deals: Deal[] = [
+  {
+    id: "1",
+    title: "Plan Empresarial - Acme Corp",
+    company: "Acme Corp",
+    value: 45000,
+    stage: "closed",
+    probability: 100,
+    closeDate: "2025-09-28",
+    contact: "Juan Smith",
+  },
+  {
+    id: "2",
+    title: "Integración Personalizada - Global Systems",
+    company: "Global Systems",
+    value: 67500,
+    stage: "proposal",
+    probability: 65,
+    closeDate: "2025-10-15",
+    contact: "Lisa Anderson",
+  },
+  {
+    id: "3",
+    title: "Licencia 50 Usuarios - TechStart Inc",
+    company: "TechStart Inc",
+    value: 28000,
+    stage: "qualified",
+    probability: 45,
+    closeDate: "2025-10-22",
+    contact: "David Kim",
+  },
+  {
+    id: "4",
+    title: "CloudScale Solutions",
+    company: "CloudScale Solutions",
+    value: 32000,
+    stage: "negotiation",
+    probability: 75,
+    closeDate: "2025-10-08",
+    contact: "María García",
+  },
+  {
+    id: "5",
+    title: "Implementación DataFlow",
+    company: "DataFlow",
+    value: 52000,
+    stage: "proposal",
+    probability: 60,
+    closeDate: "2025-10-30",
+    contact: "Roberto Chen",
+  },
+]
