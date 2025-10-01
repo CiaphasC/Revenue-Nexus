@@ -4,7 +4,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Custom Lumen Studio theme with sophisticated dark palette */
+  /* Custom Revenue Nexus theme with sophisticated dark palette */
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -150,6 +150,11 @@
   --color-glow-accent: var(--glow-accent);
   --color-brand: var(--brand);
   --color-brand-glow: var(--brand-glow);
+
+  --gradient-aurora-1: radial-gradient(circle, oklch(0.70 0.19 240), transparent 70%);
+  --gradient-aurora-2: radial-gradient(circle, oklch(0.65 0.18 280), transparent 70%);
+  --gradient-aurora-3: radial-gradient(circle, oklch(0.68 0.16 200), transparent 70%);
+  --gradient-nav-shimmer: linear-gradient(90deg, transparent, oklch(0.985 0 0 / 0.12), transparent);
 
   --shadow-x: 0px;
   --shadow-y: 1px;
@@ -311,6 +316,72 @@
   }
 }
 
+@layer components {
+  .surface-glass {
+    @apply border border-border/50 bg-card/60 backdrop-blur-sm shadow-xl;
+  }
+
+  .nav-tile {
+    @apply relative block overflow-hidden rounded-lg transition-all duration-300;
+  }
+
+  .nav-tile__icon {
+    @apply flex shrink-0 items-center justify-center rounded-lg transition-all duration-300;
+  }
+
+  .nav-tile__label {
+    @apply flex-1 text-sm font-semibold;
+  }
+
+  .nav-tile__indicator {
+    @apply size-2 rounded-full bg-chart-1 shadow-lg shadow-chart-1/50;
+  }
+
+  .nav-tile__glow {
+    @apply bg-background/50 shadow-lg;
+  }
+
+  .shimmer-overlay {
+    @apply absolute inset-0;
+    background-image: var(--gradient-nav-shimmer);
+    animation: shimmer 2s infinite;
+  }
+
+  .aurora-blob-1 {
+    @apply pointer-events-none absolute left-1/4 top-1/4 rounded-full blur-3xl will-change-transform opacity-30;
+    width: 600px;
+    height: 600px;
+    background-image: var(--gradient-aurora-1);
+    animation: aurora-1 20s ease-in-out infinite;
+  }
+
+  .aurora-blob-2 {
+    @apply pointer-events-none absolute right-1/4 top-1/3 rounded-full blur-3xl will-change-transform opacity-25;
+    width: 500px;
+    height: 500px;
+    background-image: var(--gradient-aurora-2);
+    animation: aurora-2 25s ease-in-out infinite;
+  }
+
+  .aurora-blob-3 {
+    @apply pointer-events-none absolute bottom-1/4 left-1/3 rounded-full blur-3xl will-change-transform opacity-20;
+    width: 550px;
+    height: 550px;
+    background-image: var(--gradient-aurora-3);
+    animation: aurora-3 30s ease-in-out infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shimmer-overlay,
+  .aurora-blob,
+  .aurora-blob-1,
+  .aurora-blob-2,
+  .aurora-blob-3,
+  .animate-particle {
+    animation: none !important;
+  }
+}
 /* Custom utility classes for glow effects */
 @layer utilities {
   .glow-sm {
@@ -394,15 +465,12 @@
     animation: particle 1s ease-out forwards;
   }
 
-  .animate-aurora-1 {
-    animation: aurora-1 20s ease-in-out infinite;
-  }
-
-  .animate-aurora-2 {
-    animation: aurora-2 25s ease-in-out infinite;
-  }
-
-  .animate-aurora-3 {
-    animation: aurora-3 30s ease-in-out infinite;
-  }
 }
+
+
+
+
+
+
+
+

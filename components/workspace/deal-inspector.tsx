@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { DollarSign, Calendar, User, Undo2 } from "lucide-react"
+import { DollarSign, Calendar, Undo2 } from "lucide-react"
 
 import { getDeal } from "@/lib/server/workspace-data"
 import { Badge } from "@/components/ui/badge"

@@ -10,7 +10,6 @@ interface WorkspaceStore {
 }
 
 declare global {
-  // eslint-disable-next-line no-var
   var __WORKSPACE_STORE__: WorkspaceStore | undefined
 }
 

@@ -89,7 +89,7 @@ export function NewDealDialog({ open, onOpenChange, onDealCreated }: NewDealDial
     try {
       const result = await createDealAction(formData)
       setState(result)
-    } catch (error) {
+    } catch {
       setState({ success: false, error: "No se pudo crear el negocio. Inténtalo nuevamente." })
     } finally {
       setIsPending(false)

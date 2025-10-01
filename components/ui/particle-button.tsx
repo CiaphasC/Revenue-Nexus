@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 
+import { useReducedMotion } from "@/hooks/use-reduced-motion"
 import { cn } from "@/lib/utils"
 
 interface ParticleButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -12,16 +13,21 @@ interface ParticleButtonProps extends React.ButtonHTMLAttributes<HTMLButtonEleme
 }
 
 export const ParticleButton = React.forwardRef<HTMLButtonElement, ParticleButtonProps>(
-  ({
-    children,
-    className,
-    variant = "default",
-    href,
-    onClick,
-    disabled,
-    ...props
-  }, ref) => {
+  (
+    {
+      children,
+      className,
+      variant = "default",
+      href,
+      onClick,
+      disabled,
+      ...props
+    },
+    ref,
+  ) => {
     const router = useRouter()
+    const prefersReducedMotion = useReducedMotion()
+    const showParticles = !prefersReducedMotion
     const [particles, setParticles] = React.useState<Array<{ id: number; x: number; y: number }>>([])
     const timeoutsRef = React.useRef<number[]>([])
 
@@ -33,7 +39,17 @@ export const ParticleButton = React.forwardRef<HTMLButtonElement, ParticleButton
     }, [])
 
     React.useEffect(() => {
-      if (!href) return
+      if (!showParticles) {
+        setParticles([])
+        timeoutsRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId))
+        timeoutsRef.current = []
+      }
+    }, [showParticles])
+
+    React.useEffect(() => {
+      if (!href) {
+        return
+      }
       try {
         router.prefetch(href)
       } catch {
@@ -47,26 +63,28 @@ export const ParticleButton = React.forwardRef<HTMLButtonElement, ParticleButton
         return
       }
 
-      const rect = event.currentTarget.getBoundingClientRect()
-      const x = event.clientX - rect.left
-      const y = event.clientY - rect.top
+      if (showParticles) {
+        const rect = event.currentTarget.getBoundingClientRect()
+        const x = event.clientX - rect.left
+        const y = event.clientY - rect.top
 
-      const newParticles = Array.from({ length: 12 }, (_, index) => ({
-        id: Date.now() + index,
-        x,
-        y,
-      }))
+        const newParticles = Array.from({ length: 12 }, (_, index) => ({
+          id: Date.now() + index,
+          x,
+          y,
+        }))
 
-      setParticles((previous) => [...previous, ...newParticles])
+        setParticles((previous) => [...previous, ...newParticles])
 
-      const timeoutId = window.setTimeout(() => {
-        setParticles((previous) =>
-          previous.filter((particle) => !newParticles.some((candidate) => candidate.id === particle.id)),
-        )
-        timeoutsRef.current = timeoutsRef.current.filter((storedId) => storedId !== timeoutId)
-      }, 1000)
+        const timeoutId = window.setTimeout(() => {
+          setParticles((previous) =>
+            previous.filter((particle) => !newParticles.some((candidate) => candidate.id === particle.id)),
+          )
+          timeoutsRef.current = timeoutsRef.current.filter((storedId) => storedId !== timeoutId)
+        }, 1000)
 
-      timeoutsRef.current.push(timeoutId)
+        timeoutsRef.current.push(timeoutId)
+      }
 
       onClick?.(event)
 
@@ -92,20 +110,27 @@ export const ParticleButton = React.forwardRef<HTMLButtonElement, ParticleButton
         disabled={disabled}
         {...props}
       >
-        <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+        <div
+          className={cn(
+            "shimmer-overlay -translate-x-full transition-opacity duration-300 motion-reduce:opacity-0",
+            showParticles ? "opacity-100" : "opacity-0",
+          )}
+          aria-hidden
+        />
 
-        {particles.map((particle, index) => (
-          <div
-            key={particle.id}
-            className="pointer-events-none absolute size-2 animate-particle rounded-full bg-white"
-            style={{
-              left: particle.x,
-              top: particle.y,
-              animationDelay: `${index * 20}ms`,
-              transform: `rotate(${index * 30}deg)`,
-            }}
-          />
-        ))}
+        {showParticles &&
+          particles.map((particle, index) => (
+            <div
+              key={particle.id}
+              className="pointer-events-none absolute size-2 animate-particle rounded-full bg-white"
+              style={{
+                left: particle.x,
+                top: particle.y,
+                animationDelay: `${index * 20}ms`,
+                transform: `rotate(${index * 30}deg)`,
+              }}
+            />
+          ))}
 
         <span className="relative z-10 flex items-center gap-2">{children}</span>
       </button>

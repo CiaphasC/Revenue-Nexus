@@ -125,6 +125,12 @@ const NAV_GRADIENT: Record<string, { gradient: string; iconColor: string; glow: 
   },
 }
 
+type IdleCapableWindow = Window &
+  typeof globalThis & {
+    requestIdleCallback?: (callback: IdleRequestCallback, options?: IdleRequestOptions) => number
+    cancelIdleCallback?: (handle: number) => void
+  }
+
 export function Header() {
   const pathname = usePathname()
   const router = useRouter()
@@ -139,11 +145,11 @@ export function Header() {
         return
       }
       prefetchedRoutes.current.add(href)
-    try {
-      router.prefetch(href)
-    } catch {
-      // no-op
-    }
+      try {
+        router.prefetch(href)
+      } catch {
+        // no-op
+      }
     },
     [pathname, router],
   )
@@ -158,6 +164,7 @@ export function Header() {
     let idleId: number | null = null
     let timeoutId: number | null = null
     let cancelled = false
+    const idleWindow = window as IdleCapableWindow
 
     const schedule = () => {
       if (cancelled || remaining.length === 0) {
@@ -173,12 +180,8 @@ export function Header() {
         schedule()
       }
 
-      const idle = (window as any).requestIdleCallback as
-        | ((cb: IdleRequestCallback, options?: IdleRequestOptions) => number)
-        | undefined
-
-      if (typeof idle === "function") {
-        idleId = idle(() => {
+      if (typeof idleWindow.requestIdleCallback === "function") {
+        idleId = idleWindow.requestIdleCallback(() => {
           run()
         }, { timeout: 1500 })
       } else {
@@ -190,8 +193,8 @@ export function Header() {
 
     return () => {
       cancelled = true
-      if (idleId !== null && typeof (window as any).cancelIdleCallback === "function") {
-        ;(window as any).cancelIdleCallback(idleId)
+      if (idleId !== null && typeof idleWindow.cancelIdleCallback === "function") {
+        idleWindow.cancelIdleCallback(idleId)
       }
       if (timeoutId !== null) {
         window.clearTimeout(timeoutId)
@@ -207,7 +210,7 @@ export function Header() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary transition-all duration-300 hover:rotate-12">
               <span className="font-serif text-lg font-bold text-primary-foreground">L</span>
             </div>
-            <span className="font-serif text-xl font-semibold">Lumen Studio</span>
+            <span className="font-serif text-xl font-semibold">Revenue Nexus</span>
           </Link>
 
           <nav className="hidden items-center gap-1 md:flex">
@@ -277,7 +280,7 @@ export function Header() {
                               setIsLightMenuOpen(false)
                             }}
                             className={cn(
-                              "group relative w-full overflow-hidden rounded-lg p-3 text-left transition-all duration-300",
+                              "group nav-tile w-full p-3 text-left",
                               isActive
                                 ? `bg-gradient-to-r ${mode.gradient} shadow-lg ${mode.glowColor}`
                                 : "hover:bg-accent/50",
@@ -286,9 +289,9 @@ export function Header() {
                             <div className="flex items-start gap-3">
                               <div
                                 className={cn(
-                                  "flex size-10 shrink-0 items-center justify-center rounded-lg transition-all duration-300",
+                                  "nav-tile__icon size-10",
                                   isActive
-                                    ? `bg-background/50 shadow-lg ${mode.glowColor}`
+                                    ? cn("nav-tile__glow", mode.glowColor)
                                     : "bg-accent/50 group-hover:scale-110",
                                 )}
                               >
@@ -296,16 +299,16 @@ export function Header() {
                               </div>
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center justify-between">
-                                  <p className="text-sm font-semibold">{mode.label}</p>
+                                  <p className="nav-tile__label">{mode.label}</p>
                                   {isActive && (
-                                    <div className="size-2 rounded-full bg-chart-1 shadow-lg shadow-chart-1/50 animate-pulse" />
+                                    <div className="nav-tile__indicator motion-safe:animate-pulse" />
                                   )}
                                 </div>
                                 <p className="mt-0.5 text-xs text-muted-foreground">{mode.description}</p>
                               </div>
                             </div>
                             {isActive && (
-                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer" />
+                              <div className="shimmer-overlay motion-reduce:opacity-0" aria-hidden />
                             )}
                           </button>
                         )
@@ -344,7 +347,7 @@ export function Header() {
                         onFocus={() => handlePrefetch(item.href)}
                         onClick={() => setIsOpen(false)}
                         className={cn(
-                          "group relative block overflow-hidden rounded-lg p-3 text-left transition-all duration-300",
+                          "group nav-tile p-3 text-left",
                           isActive
                             ? `bg-gradient-to-r ${palette.gradient} shadow-lg ${palette.glow}`
                             : "hover:bg-accent/50",
@@ -353,9 +356,9 @@ export function Header() {
                         <div className="flex items-center gap-3">
                           <div
                             className={cn(
-                              "flex size-10 shrink-0 items-center justify-center rounded-lg transition-all duration-300",
+                              "nav-tile__icon size-10",
                               isActive
-                                ? `bg-background/50 shadow-lg ${palette.glow}`
+                                ? cn("nav-tile__glow", palette.glow)
                                 : "bg-accent/50 group-hover:scale-110",
                             )}
                           >
@@ -364,14 +367,14 @@ export function Header() {
                             )}
                           </div>
                           <div className="flex-1">
-                            <p className="text-sm font-semibold">{item.label}</p>
+                            <p className="nav-tile__label">{item.label}</p>
                           </div>
                           {isActive && (
-                            <div className="size-2 rounded-full bg-chart-1 shadow-lg shadow-chart-1/50 animate-pulse" />
+                            <div className="nav-tile__indicator motion-safe:animate-pulse" />
                           )}
                         </div>
                         {isActive && (
-                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer" />
+                          <div className="shimmer-overlay motion-reduce:opacity-0" aria-hidden />
                         )}
                       </Link>
                     )
@@ -394,7 +397,7 @@ export function Header() {
                           setIsOpen(false)
                         }}
                         className={cn(
-                          "group relative w-full overflow-hidden rounded-lg p-3 text-left transition-all duration-300",
+                          "group nav-tile w-full p-3 text-left",
                           isActive
                             ? `bg-gradient-to-r ${mode.gradient} shadow-lg ${mode.glowColor}`
                             : "hover:bg-accent/50",
@@ -403,20 +406,20 @@ export function Header() {
                         <div className="flex items-center gap-3">
                           <div
                             className={cn(
-                              "flex size-9 shrink-0 items-center justify-center rounded-lg transition-all duration-300",
+                              "nav-tile__icon size-9",
                               isActive
-                                ? `bg-background/50 shadow-lg ${mode.glowColor}`
+                                ? cn("nav-tile__glow", mode.glowColor)
                                 : "bg-accent/50 group-hover:scale-110",
                             )}
                           >
                             <Icon className={cn("size-4", isActive ? mode.iconColor : "text-muted-foreground")} />
                           </div>
                           <div className="flex-1">
-                            <p className="text-sm font-semibold">{mode.label}</p>
+                            <p className="nav-tile__label">{mode.label}</p>
                             <p className="text-xs text-muted-foreground">{mode.description}</p>
                           </div>
                           {isActive && (
-                            <div className="size-2 rounded-full bg-chart-1 shadow-lg shadow-chart-1/50 animate-pulse" />
+                            <div className="nav-tile__indicator motion-safe:animate-pulse" />
                           )}
                         </div>
                       </button>
@@ -431,7 +434,3 @@ export function Header() {
     </header>
   )
 }
-
-
-
-

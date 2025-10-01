@@ -45,7 +45,7 @@ export default function HomePage() {
           </h1>
 
           <p className="mx-auto mb-12 max-w-2xl text-lg text-muted-foreground text-balance sm:text-xl">
-            Lumen Studio combina los patrones de arquitectura modernos de Next con un diseño cuidadoso para que tus
+            Revenue Nexus combina los patrones de arquitectura modernos de Next con un diseño cuidadoso para que tus
             productos luzcan profesionales, accesibles y fluidos desde cualquier dispositivo.
           </p>
 

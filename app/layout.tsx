@@ -9,7 +9,7 @@ import { LightEffectsProvider } from "@/components/lights/light-effects-provider
 import { LightSettingsProvider } from "@/contexts/light-settings-context"
 
 export const metadata: Metadata = {
-  title: "Lumen Studio - Design-grade UI. Motion-grade polish.",
+  title: "Revenue Nexus - Design-grade UI. Motion-grade polish.",
   description: "A sophisticated demo showcasing React 19, Tailwind v4, and advanced cursor light effects",
   generator: "v0.app",
 }
