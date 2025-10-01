@@ -1,8 +1,9 @@
 "use client"
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { SolIcon } from "@/components/ui/sol-icon"
 import { Badge } from "@/components/ui/badge"
-import { DollarSign, Calendar, User } from "lucide-react"
+import { Calendar, User } from "lucide-react"
 import type { Deal } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { formatCurrency, formatDate } from "@/lib/utils/format"
@@ -58,18 +59,18 @@ export function DealCard({ deal, isPending = false }: DealCardProps) {
       </CardHeader>
       <CardContent className="relative space-y-3 text-sm">
         <div className="flex items-center gap-2 text-foreground">
-          <DollarSign className="size-4 text-chart-1" aria-hidden="true" />
+          <SolIcon className="size-4 text-chart-1" aria-hidden />
           <span className="font-semibold">{formatCurrency(deal.value)}</span>
           <span className="text-muted-foreground">
             Probabilidad {deal.probability.toFixed(0)}%
           </span>
         </div>
         <div className="flex items-center gap-2 text-muted-foreground">
-          <User className="size-4" aria-hidden="true" />
+          <User className="size-4" aria-hidden />
           <span>{deal.contact}</span>
         </div>
         <div className="flex items-center gap-2 text-muted-foreground">
-          <Calendar className="size-4" aria-hidden="true" />
+          <Calendar className="size-4" aria-hidden />
           <span>{formatDate(deal.closeDate)}</span>
         </div>
       </CardContent>

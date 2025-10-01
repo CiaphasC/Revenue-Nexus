@@ -4,6 +4,7 @@ import { revalidatePath, revalidateTag } from "next/cache"
 import { z } from "zod"
 
 import { appendActivity, appendCalendarEvent, getDealById, upsertDeal } from "@/lib/server/workspace-store"
+import { formatCurrency as formatCurrencyIntl } from "@/lib/utils/format"
 import type { Activity, CalendarEvent, Deal } from "@/lib/types"
 import { STAGE_LABELS, stageProbability } from "@/lib/workspace/deals"
 import { emitWorkspaceEvent } from "@/lib/server/event-bus"
@@ -19,7 +20,7 @@ const createDealSchema = z.object({
   closeDate: z.string().min(4),
 })
 
-const formatCurrency = (value: number) => `S/ ${Math.round(value).toLocaleString("es-PE")}`
+const formatDealCurrency = (value: number) => formatCurrencyIntl(value)
 
 export async function createDealAction(formData: FormData) {
   const parsed = createDealSchema.safeParse(Object.fromEntries(formData))
@@ -51,7 +52,7 @@ export async function createDealAction(formData: FormData) {
     id: crypto.randomUUID(),
     type: data.stage === "closed" ? "deal" : "email",
     title: data.stage === "closed" ? `Negocio cerrado: ${data.title}` : `Nuevo negocio: ${data.title}`,
-    description: `${data.company} • ${formatCurrency(data.value)}`,
+    description: `${data.company} • ${formatDealCurrency(data.value)}`,
     timestamp: "Justo ahora",
     user: "Automatización",
   }
@@ -63,7 +64,7 @@ export async function createDealAction(formData: FormData) {
     id: crypto.randomUUID(),
     type: "deal",
     title: data.title,
-    description: `${data.company} • ${formatCurrency(data.value)}`,
+    description: `${data.company} • ${formatDealCurrency(data.value)}`,
     date: data.closeDate,
     time: "09:00",
     owner: data.contact,
@@ -139,7 +140,7 @@ export async function updateDealStageAction(formData: FormData) {
     id: crypto.randomUUID(),
     type: stage === "closed" ? "deal" : "meeting",
     title: `${existing.title} → ${STAGE_LABELS[stage]}`,
-    description: `${existing.company} • ${formatCurrency(existing.value)}`,
+    description: `${existing.company} • ${formatDealCurrency(existing.value)}`,
     date: formattedDate,
     time: formattedTime,
     owner: existing.contact,

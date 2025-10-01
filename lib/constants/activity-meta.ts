@@ -1,6 +1,7 @@
 import type { Activity } from "@/lib/types"
+import { SolIcon } from "@/components/ui/sol-icon"
 import type { LucideIcon } from "lucide-react"
-import { Activity as ActivityIcon, DollarSign, Target, Users } from "lucide-react"
+import { Activity as ActivityIcon, Target, Users } from "lucide-react"
 
 interface ActivityMeta {
   icon: LucideIcon
@@ -10,7 +11,7 @@ interface ActivityMeta {
 
 export const ACTIVITY_META: Record<Activity["type"], ActivityMeta> = {
   deal: {
-    icon: DollarSign,
+    icon: SolIcon,
     calendarColor: "bg-chart-1/20 border-chart-1/40 text-chart-1",
     badgeColor: "text-chart-1",
   },

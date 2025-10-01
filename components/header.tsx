@@ -208,7 +208,7 @@ export function Header() {
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2 transition-transform duration-300 hover:scale-105">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary transition-all duration-300 hover:rotate-12">
-              <span className="font-serif text-lg font-bold text-primary-foreground">L</span>
+              <span className="font-serif text-lg font-bold text-primary-foreground">R</span>
             </div>
             <span className="font-serif text-xl font-semibold">Revenue Nexus</span>
           </Link>

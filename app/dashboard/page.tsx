@@ -1,13 +1,15 @@
 import type { ReactNode } from "react"
+
 import { kpis, recentActivities } from "@/lib/data/mock-data"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { SolIcon } from "@/components/ui/sol-icon"
 import { Badge } from "@/components/ui/badge"
-import { ArrowDown, ArrowUp, TrendingUp, DollarSign, Users, Target, Award, Activity } from "lucide-react"
+import { ArrowDown, ArrowUp, TrendingUp, Users, Target, Award, Activity } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { formatCurrency } from "@/lib/utils/format"
 
 const ACTIVITY_LABEL: Record<string, { icon: ReactNode; tone: string }> = {
-  deal: { icon: <DollarSign className="size-4" aria-hidden />, tone: "text-chart-1" },
+  deal: { icon: <SolIcon className="size-4" aria-hidden />, tone: "text-chart-1" },
   meeting: { icon: <Users className="size-4" aria-hidden />, tone: "text-chart-2" },
   email: { icon: <Activity className="size-4" aria-hidden />, tone: "text-chart-3" },
   call: { icon: <Target className="size-4" aria-hidden />, tone: "text-chart-4" },
@@ -50,8 +52,18 @@ export default function DashboardPage() {
                   <CardContent className="flex items-center gap-2 text-sm text-muted-foreground">
                     {Icon}
                     <span
-                      className={cn("font-medium", trend === "up" && "text-chart-2", trend === "down" && "text-destructive")}
-                      aria-label={trend === "up" ? "Tendencia al alza" : trend === "down" ? "Tendencia a la baja" : "Tendencia estable"}
+                      className={cn(
+                        "font-medium",
+                        trend === "up" && "text-chart-2",
+                        trend === "down" && "text-destructive",
+                      )}
+                      aria-label={
+                        trend === "up"
+                          ? "Tendencia al alza"
+                          : trend === "down"
+                            ? "Tendencia a la baja"
+                            : "Tendencia estable"
+                      }
                     >
                       {kpi.change > 0 ? "+" : ""}
                       {kpi.change}%
@@ -92,7 +104,10 @@ export default function DashboardPage() {
                     className="flex items-start gap-4 rounded-xl border border-border/40 bg-background/60 p-4 shadow-sm transition-colors hover:border-chart-1/40"
                   >
                     <div
-                      className={cn("flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted", meta.tone)}
+                      className={cn(
+                        "flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted",
+                        meta.tone,
+                      )}
                       aria-hidden
                     >
                       {meta.icon}
@@ -106,7 +121,7 @@ export default function DashboardPage() {
                       </div>
                       <p className="text-sm text-muted-foreground">{activity.description}</p>
                       <p className="text-xs text-muted-foreground/80">
-                        {activity.user} · {activity.timestamp}
+                        {activity.user} • {activity.timestamp}
                       </p>
                     </div>
                   </li>

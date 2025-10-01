@@ -1,10 +1,12 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { DollarSign, Calendar, Undo2 } from "lucide-react"
+import { Calendar, Undo2 } from "lucide-react"
 
 import { getDeal } from "@/lib/server/workspace-data"
 import { Badge } from "@/components/ui/badge"
+import { SolIcon } from "@/components/ui/sol-icon"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { formatCurrency, formatDate } from "@/lib/utils/format"
 
 const stageLabels: Record<string, string> = {
   lead: "Prospecto",
@@ -37,8 +39,8 @@ export async function DealInspector({ dealId }: { dealId: string }) {
       <CardContent className="space-y-4">
         <div className="rounded-lg border border-border/40 bg-background/60 p-4">
           <div className="flex items-center gap-3 text-lg font-semibold text-chart-1">
-            <DollarSign className="size-5" />
-            S/ {deal.value.toLocaleString("es-PE")}
+            <SolIcon className="size-5" aria-hidden />
+            {formatCurrency(deal.value)}
           </div>
           <p className="mt-2 text-sm text-muted-foreground">Probabilidad: {deal.probability}%</p>
         </div>
@@ -55,8 +57,8 @@ export async function DealInspector({ dealId }: { dealId: string }) {
         </div>
 
         <div className="flex items-center gap-3 rounded-lg border border-border/40 bg-background/60 p-4 text-sm text-muted-foreground">
-          <Calendar className="size-4" />
-          <span>Cierre estimado: {new Date(deal.closeDate).toLocaleDateString("es-PE")}</span>
+          <Calendar className="size-4" aria-hidden />
+          <span>Cierre estimado: {formatDate(deal.closeDate)}</span>
         </div>
       </CardContent>
     </Card>
