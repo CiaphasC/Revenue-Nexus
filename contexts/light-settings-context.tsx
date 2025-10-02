@@ -4,7 +4,7 @@ import { createContext, useContext, useState, useEffect, type ReactNode } from "
 import type { LightMode, LightSettings } from "@/lib/types"
 
 const DEFAULT_SETTINGS: LightSettings = {
-  mode: "spotlight",
+  mode: "aurora",
   intensity: 0.7,
   radius: 300,
   blendMode: "screen",
