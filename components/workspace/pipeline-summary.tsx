@@ -24,22 +24,22 @@ export async function PipelineSummary() {
 
   return (
     <Card className="rounded-2xl border border-border/40 bg-card/60">
-      <CardHeader className="pb-4">
+      <CardHeader className="pb-3">
         <CardTitle className="font-serif text-2xl text-foreground">Pipeline snapshot</CardTitle>
         <CardDescription className="text-sm text-muted-foreground">
           Mide la salud de tu embudo y cuántas oportunidades hay por etapa.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 p-6 pt-0">
         <dl className="grid gap-4 sm:grid-cols-2">
           <div className="rounded-xl border border-chart-1/40 bg-chart-1/10 p-4">
-            <dt className="text-xs font-medium uppercase tracking-[0.2em] text-chart-1/80">Valor total</dt>
+            <dt className="text-xs font-semibold uppercase tracking-[0.28em] text-chart-1/80">Valor total</dt>
             <dd className="mt-2 text-2xl font-semibold text-chart-1">
               {formatCurrency(Math.round(snapshot.totalValue))}
             </dd>
           </div>
           <div className="rounded-xl border border-chart-2/40 bg-chart-2/10 p-4">
-            <dt className="text-xs font-medium uppercase tracking-[0.2em] text-chart-2/80">Valor ponderado</dt>
+            <dt className="text-xs font-semibold uppercase tracking-[0.28em] text-chart-2/80">Valor ponderado</dt>
             <dd className="mt-2 text-2xl font-semibold text-chart-2">
               {formatCurrency(Math.round(snapshot.weightedValue))}
             </dd>
@@ -51,7 +51,7 @@ export async function PipelineSummary() {
             <Badge
               key={stage}
               variant="outline"
-              className={`rounded-full border px-3 py-1 text-xs uppercase tracking-wider ${STAGE_COLORS[stage] ?? "border-border/40 bg-background/40 text-muted-foreground"}`}
+              className={`rounded-full border px-3 py-1 text-xs uppercase tracking-[0.24em] ${STAGE_COLORS[stage] ?? "border-border/40 bg-background/40 text-muted-foreground"}`}
             >
               {STAGE_LABELS[stage] ?? stage}: {count}
             </Badge>

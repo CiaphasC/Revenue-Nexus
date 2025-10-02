@@ -11,6 +11,13 @@ interface LiveActivityStreamProps {
   initialActivities: Activity[]
 }
 
+const ACTIVITY_LABELS: Record<Activity["type"], string> = {
+  deal: "Actividad de negocio",
+  meeting: "Actividad de reunión",
+  email: "Actividad de correo",
+  call: "Actividad de llamada",
+}
+
 export function LiveActivityStream({ initialActivities }: LiveActivityStreamProps) {
   const [activities, setActivities] = useState<Activity[]>(initialActivities)
 
@@ -46,41 +53,39 @@ export function LiveActivityStream({ initialActivities }: LiveActivityStreamProp
   }, [])
 
   return (
-    <ul className="space-y-3">
-      {activities.map((activity) => {
-        const meta = ACTIVITY_META[activity.type]
-        const Icon = meta.icon
+    <div className="max-h-80 overflow-y-auto rounded-2xl border border-border/30 bg-background/40 p-2">
+      <ul className="divide-y divide-border/40">
+        {activities.map((activity) => {
+          const meta = ACTIVITY_META[activity.type]
+          const Icon = meta.icon
+          const label = ACTIVITY_LABELS[activity.type]
 
-        return (
-          <li
-            key={activity.id}
-            className={cn(
-              "group relative overflow-hidden rounded-2xl border border-border/40 bg-background/60 p-4 shadow-sm",
-              "transition-all duration-200 hover:border-chart-1/40 hover:bg-background/80",
-            )}
-          >
-            <div className="flex items-start gap-3">
-              <div
-                className={cn(
-                  "flex size-10 shrink-0 items-center justify-center rounded-lg bg-placeholder transition-transform duration-200",
-                  meta.calendarColor,
-                  "group-hover:scale-105",
-                )}
-                aria-hidden
-              >
-                <Icon className="size-4" />
+          return (
+            <li key={activity.id} className="group px-3 py-4 transition-colors duration-200 hover:bg-background/70">
+              <div className="flex items-start gap-3">
+                <div
+                  className={cn(
+                    "flex size-10 shrink-0 items-center justify-center rounded-lg border transition-transform duration-200",
+                    meta.calendarColor,
+                    "group-hover:scale-105",
+                  )}
+                  aria-label={label}
+                  role="img"
+                >
+                  <Icon className="size-4" aria-hidden />
+                </div>
+                <div className="min-w-0 flex-1 space-y-1">
+                  <h3 className="font-medium leading-tight text-foreground">{activity.title}</h3>
+                  <p className="text-sm text-muted-foreground">{activity.description}</p>
+                  <p className="text-xs text-muted-foreground/80">
+                    {activity.user} · {activity.timestamp}
+                  </p>
+                </div>
               </div>
-              <div className="min-w-0 flex-1 space-y-1">
-                <h3 className="font-medium leading-tight text-foreground">{activity.title}</h3>
-                <p className="text-sm text-muted-foreground">{activity.description}</p>
-                <p className="text-xs text-muted-foreground/80">
-                  {activity.user} · {activity.timestamp}
-                </p>
-              </div>
-            </div>
-          </li>
-        )}
-      )}
-    </ul>
+            </li>
+          )
+        })}
+      </ul>
+    </div>
   )
 }
