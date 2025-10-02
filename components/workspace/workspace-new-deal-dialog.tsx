@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import type { Deal } from "@/lib/types"
 
 interface WorkspaceNewDealDialogProps {
   open: boolean
@@ -18,6 +19,24 @@ interface WorkspaceNewDealDialogProps {
 
 export function WorkspaceNewDealDialog({ open, onOpenChange, onSubmit, isPending }: WorkspaceNewDealDialogProps) {
   const [error, setError] = useState<string | null>(null)
+  const [stage, setStage] = useState<Deal["stage"]>("lead")
+
+  useEffect(() => {
+    if (!open) {
+      setStage("lead")
+      setError(null)
+    }
+  }, [open])
+
+  const handleDialogChange = (value: boolean) => {
+    if (!value) {
+      setStage("lead")
+      setError(null)
+    }
+    onOpenChange(value)
+  }
+
+  const closeDialog = () => handleDialogChange(false)
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -30,14 +49,15 @@ export function WorkspaceNewDealDialog({ open, onOpenChange, onSubmit, isPending
 
     if (result.success) {
       form.reset()
-      onOpenChange(false)
+      setStage("lead")
+      closeDialog()
     } else if (result.error) {
       setError(result.error)
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleDialogChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle className="font-serif text-2xl">Crear Nuevo Negocio</DialogTitle>
@@ -45,6 +65,7 @@ export function WorkspaceNewDealDialog({ open, onOpenChange, onSubmit, isPending
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <input type="hidden" name="stage" value={stage} />
           <div className="space-y-2">
             <Label htmlFor="title">Título del Negocio</Label>
             <Input id="title" name="title" placeholder="Plan Empresarial - Acme Corp" required disabled={isPending} />
@@ -71,7 +92,12 @@ export function WorkspaceNewDealDialog({ open, onOpenChange, onSubmit, isPending
 
           <div className="space-y-2">
             <Label htmlFor="stage">Etapa</Label>
-            <Select name="stage" defaultValue="lead" disabled={isPending}>
+            <Select
+              name="stage"
+              value={stage}
+              onValueChange={(value) => setStage(value as Deal["stage"])}
+              disabled={isPending}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Seleccionar etapa" />
               </SelectTrigger>
@@ -98,7 +124,7 @@ export function WorkspaceNewDealDialog({ open, onOpenChange, onSubmit, isPending
           {error && <p className="text-sm text-destructive">{error}</p>}
 
           <div className="flex justify-end gap-3">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
+            <Button type="button" variant="outline" onClick={closeDialog} disabled={isPending}>
               Cancelar
             </Button>
             <Button type="submit" disabled={isPending}>
