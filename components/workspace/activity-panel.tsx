@@ -9,15 +9,15 @@ export async function ActivityPanel() {
 
   return (
     <Card className="rounded-2xl border border-border/40 bg-card/60">
-      <CardHeader>
+      <CardHeader className="pb-3">
         <CardTitle className="font-serif text-2xl text-foreground">Actividad en tiempo real</CardTitle>
         <CardDescription className="text-sm text-muted-foreground">
           Seguimos los movimientos más recientes del equipo y los mostramos al instante mediante streaming.
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-6 pt-0">
         <Suspense fallback={<p className="text-sm text-muted-foreground">Iniciando stream...</p>}>
-          <LiveActivityStream initialActivities={activities.slice(0, 12)} />
+          <LiveActivityStream initialActivities={activities.slice(0, 20)} />
         </Suspense>
       </CardContent>
     </Card>
