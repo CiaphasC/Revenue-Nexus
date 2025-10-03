@@ -64,4 +64,12 @@ export interface CalendarEvent {
   calendarId?: string
   color?: string
   allDay?: boolean
+  recurrence?: CalendarRecurrenceRule
+}
+
+export interface CalendarRecurrenceRule {
+  frequency: "none" | "daily" | "weekly" | "monthly"
+  interval?: number
+  count?: number
+  until?: string
 }

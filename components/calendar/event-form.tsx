@@ -3,7 +3,6 @@
 import { useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
 
 import {
   Dialog,
@@ -12,21 +11,32 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Button } from "@/components/ui/button"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import type { CalendarEvent } from "@/lib/types"
 import {
   calendarEventFormSchema,
   type CalendarEventInput,
+  type CalendarFormInput,
 } from "@/lib/validators/calendar"
 
-const formSchema = calendarEventFormSchema
+const activityOptions: { value: CalendarEventInput["type"]; label: string }[] = [
+  { value: "meeting", label: "Reunión" },
+  { value: "deal", label: "Negocio" },
+  { value: "call", label: "Llamada" },
+  { value: "email", label: "Correo" },
+]
 
-type CalendarEventFormValues = z.infer<typeof formSchema>
+const recurrenceOptions = [
+  { value: "none", label: "No repetir" },
+  { value: "daily", label: "Diariamente" },
+  { value: "weekly", label: "Semanalmente" },
+  { value: "monthly", label: "Mensualmente" },
+] as const
 
 interface CalendarMetadata {
   id: string
@@ -38,13 +48,17 @@ interface EventFormProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   mode: "create" | "edit"
-  defaultEvent?: CalendarEvent | null
+  defaultEvent: CalendarEvent | null
   calendars: CalendarMetadata[]
   onSubmit: (values: CalendarEventInput & { id?: string }) => Promise<void>
   submitting?: boolean
+  onDuplicate?: (event: CalendarEvent) => void
 }
 
-function toDateTimeInput(value: string | Date) {
+function toDateTimeInput(value: string | Date | undefined) {
+  if (!value) {
+    return ""
+  }
   const date = value instanceof Date ? value : new Date(value)
   if (Number.isNaN(date.getTime())) {
     return ""
@@ -57,12 +71,19 @@ function toDateTimeInput(value: string | Date) {
   return `${year}-${month}-${day}T${hours}:${minutes}`
 }
 
-const activityOptions: { value: CalendarEventInput["type"]; label: string }[] = [
-  { value: "meeting", label: "Reunión" },
-  { value: "deal", label: "Negocio" },
-  { value: "call", label: "Llamada" },
-  { value: "email", label: "Correo" },
-]
+function toDateInput(value: string | Date | undefined) {
+  if (!value) {
+    return undefined
+  }
+  const date = value instanceof Date ? value : new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    return undefined
+  }
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, "0")
+  const day = String(date.getDate()).padStart(2, "0")
+  return `${year}-${month}-${day}`
+}
 
 export function EventForm({
   open,
@@ -72,10 +93,10 @@ export function EventForm({
   calendars,
   onSubmit,
   submitting,
+  onDuplicate,
 }: EventFormProps) {
-  const firstCalendar = calendars[0]
-  const form = useForm<CalendarEventFormValues>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<CalendarFormInput>({
+    resolver: zodResolver(calendarEventFormSchema),
     defaultValues: {
       id: defaultEvent?.id,
       title: defaultEvent?.title ?? "",
@@ -88,10 +109,14 @@ export function EventForm({
       owner: defaultEvent?.owner ?? "",
       organizer: defaultEvent?.organizer ?? defaultEvent?.owner ?? "",
       location: defaultEvent?.location ?? "",
-      calendarId: defaultEvent?.calendarId ?? firstCalendar?.id ?? "mi-calendario",
-      color: defaultEvent?.color ?? firstCalendar?.color ?? "#6366f1",
+      calendarId: defaultEvent?.calendarId ?? calendars[0]?.id ?? "mi-calendario",
+      color: defaultEvent?.color ?? calendars[0]?.color ?? "#6366f1",
       attendeesText: defaultEvent?.attendees?.join(", ") ?? "",
       allDay: defaultEvent?.allDay ?? false,
+      recurrenceFrequency: defaultEvent?.recurrence?.frequency ?? "none",
+      recurrenceInterval: defaultEvent?.recurrence?.interval ?? 1,
+      recurrenceCount: defaultEvent?.recurrence?.count ?? undefined,
+      recurrenceUntil: toDateInput(defaultEvent?.recurrence?.until),
     },
   })
 
@@ -108,38 +133,45 @@ export function EventForm({
       owner: defaultEvent?.owner ?? "",
       organizer: defaultEvent?.organizer ?? defaultEvent?.owner ?? "",
       location: defaultEvent?.location ?? "",
-      calendarId: defaultEvent?.calendarId ?? firstCalendar?.id ?? "mi-calendario",
-      color: defaultEvent?.color ?? firstCalendar?.color ?? "#6366f1",
+      calendarId: defaultEvent?.calendarId ?? calendars[0]?.id ?? "mi-calendario",
+      color: defaultEvent?.color ?? calendars[0]?.color ?? "#6366f1",
       attendeesText: defaultEvent?.attendees?.join(", ") ?? "",
       allDay: defaultEvent?.allDay ?? false,
+      recurrenceFrequency: defaultEvent?.recurrence?.frequency ?? "none",
+      recurrenceInterval: defaultEvent?.recurrence?.interval ?? 1,
+      recurrenceCount: defaultEvent?.recurrence?.count ?? undefined,
+      recurrenceUntil: toDateInput(defaultEvent?.recurrence?.until),
     })
-  }, [defaultEvent, firstCalendar?.color, firstCalendar?.id, form])
+  }, [calendars, defaultEvent, form])
 
   const allDay = form.watch("allDay")
+  const recurrenceFrequency = form.watch("recurrenceFrequency")
 
   useEffect(() => {
     if (allDay) {
       const currentStart = form.getValues("start")
-      const startDate = new Date(currentStart || new Date())
-      const startValue = new Date(
+      const startDate = currentStart ? new Date(currentStart) : new Date()
+      const normalizedStart = new Date(
         startDate.getFullYear(),
         startDate.getMonth(),
         startDate.getDate(),
         0,
         0,
       )
-      const endValue = new Date(startValue.getTime() + 24 * 60 * 60 * 1000)
-      form.setValue("start", toDateTimeInput(startValue))
-      form.setValue("end", toDateTimeInput(endValue))
+      const normalizedEnd = new Date(normalizedStart.getTime() + 24 * 60 * 60 * 1000)
+      form.setValue("start", toDateTimeInput(normalizedStart))
+      form.setValue("end", toDateTimeInput(normalizedEnd))
     }
   }, [allDay, form])
 
   const calendarId = form.watch("calendarId")
 
   useEffect(() => {
-    const matched = calendars.find((item) => item.id === calendarId)
-    if (matched && !defaultEvent?.color) {
-      form.setValue("color", matched.color)
+    if (!defaultEvent?.color) {
+      const matched = calendars.find((calendar) => calendar.id === calendarId)
+      if (matched) {
+        form.setValue("color", matched.color)
+      }
     }
   }, [calendarId, calendars, defaultEvent?.color, form])
 
@@ -147,6 +179,15 @@ export function EventForm({
     const attendees = values.attendeesText
       ? values.attendeesText.split(",").map((person) => person.trim()).filter(Boolean)
       : []
+
+    const recurrence = values.recurrenceFrequency === "none"
+      ? undefined
+      : {
+          frequency: values.recurrenceFrequency,
+          interval: values.recurrenceInterval ?? 1,
+          count: values.recurrenceCount ?? undefined,
+          until: values.recurrenceUntil ?? undefined,
+        }
 
     const payload: CalendarEventInput & { id?: string } = {
       id: values.id,
@@ -162,6 +203,7 @@ export function EventForm({
       color: values.color,
       attendees,
       allDay: values.allDay,
+      recurrence,
     }
 
     await onSubmit(payload)
@@ -171,12 +213,12 @@ export function EventForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl border border-border/40 bg-background/90 p-6 shadow-2xl shadow-chart-1/20 backdrop-blur">
+      <DialogContent className="max-w-2xl gap-6 border border-border/40 bg-background/90 p-6 shadow-2xl shadow-black/10 backdrop-blur">
         <DialogHeader>
           <DialogTitle className="font-serif text-2xl text-foreground">{modeLabel}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={handleSubmit} className="grid gap-4">
+          <form onSubmit={handleSubmit} className="grid gap-5">
             <div className="grid gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
@@ -203,7 +245,7 @@ export function EventForm({
                           <SelectValue placeholder="Selecciona" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="border-border/40 bg-background/90 backdrop-blur">
+                      <SelectContent>
                         {activityOptions.map((option) => (
                           <SelectItem key={option.value} value={option.value}>
                             {option.label}
@@ -216,23 +258,6 @@ export function EventForm({
                 )}
               />
             </div>
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Descripción</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      {...field}
-                      placeholder="Notas, agenda o contexto del evento"
-                      className="min-h-24 rounded-xl"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
             <div className="grid gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
@@ -241,7 +266,7 @@ export function EventForm({
                   <FormItem>
                     <FormLabel>Inicio</FormLabel>
                     <FormControl>
-                      <Input type="datetime-local" className="rounded-xl" {...field} />
+                      <Input type="datetime-local" {...field} className="rounded-xl" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -254,28 +279,13 @@ export function EventForm({
                   <FormItem>
                     <FormLabel>Fin</FormLabel>
                     <FormControl>
-                      <Input type="datetime-local" className="rounded-xl" {...field} />
+                      <Input type="datetime-local" {...field} className="rounded-xl" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
-            <FormField
-              control={form.control}
-              name="allDay"
-              render={({ field }) => (
-                <FormItem className="flex items-center justify-between rounded-xl border border-border/40 bg-background/60 px-4 py-3">
-                  <div className="space-y-1">
-                    <FormLabel className="text-sm font-semibold">Evento de todo el día</FormLabel>
-                    <p className="text-xs text-muted-foreground">Oculta las horas y bloquea toda la jornada seleccionada.</p>
-                  </div>
-                  <FormControl>
-                    <Switch checked={field.value} onCheckedChange={field.onChange} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
             <div className="grid gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
@@ -284,7 +294,7 @@ export function EventForm({
                   <FormItem>
                     <FormLabel>Responsable</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Nombre de la persona a cargo" className="rounded-xl" />
+                      <Input {...field} placeholder="Nombre" className="rounded-xl" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -297,43 +307,13 @@ export function EventForm({
                   <FormItem>
                     <FormLabel>Organizador</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Quién convoca" className="rounded-xl" />
+                      <Input {...field} placeholder="Contacto" className="rounded-xl" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
-            <FormField
-              control={form.control}
-              name="attendeesText"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Participantes</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      {...field}
-                      placeholder="Separar por coma: Juan Perez, Ana Pérez"
-                      className="min-h-20 rounded-xl"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="location"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Ubicación</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Sala Prisma, Google Meet, etc." className="rounded-xl" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
             <div className="grid gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
@@ -347,7 +327,7 @@ export function EventForm({
                           <SelectValue placeholder="Selecciona" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="border-border/40 bg-background/90 backdrop-blur">
+                      <SelectContent>
                         {calendars.map((calendar) => (
                           <SelectItem key={calendar.id} value={calendar.id}>
                             {calendar.label}
@@ -366,14 +346,9 @@ export function EventForm({
                   <FormItem>
                     <FormLabel>Color</FormLabel>
                     <FormControl>
-                      <div className="flex items-center gap-3 rounded-xl border border-border/40 bg-background/60 px-3 py-2">
-                        <Input type="color" className="size-10 rounded-md border border-border/40 p-1" value={field.value} onChange={field.onChange} />
-                        <Input
-                          value={field.value}
-                          onChange={field.onChange}
-                          className="rounded-lg"
-                          placeholder="#6366f1"
-                        />
+                      <div className="flex items-center gap-2">
+                        <Input {...field} type="color" className="h-10 w-16 rounded-lg" aria-label="Color del evento" />
+                        <span className="text-xs text-muted-foreground">Personaliza el color del evento.</span>
                       </div>
                     </FormControl>
                     <FormMessage />
@@ -381,18 +356,174 @@ export function EventForm({
                 )}
               />
             </div>
-            <DialogFooter className="mt-2 flex flex-col gap-2 sm:flex-row">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="location"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Ubicación</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Sala o enlace" className="rounded-xl" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="attendeesText"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Participantes</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Separar por comas" className="rounded-xl" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Descripción</FormLabel>
+                  <FormControl>
+                    <Textarea {...field} placeholder="Notas adicionales" className="min-h-24 rounded-xl" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <div className="flex flex-col gap-4 rounded-xl border border-border/40 bg-muted/10 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Todo el día</p>
+                  <p className="text-xs text-muted-foreground">Bloquea la jornada completa.</p>
+                </div>
+                <FormField
+                  control={form.control}
+                  name="allDay"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Switch checked={field.value} onCheckedChange={field.onChange} aria-label="Evento de todo el día" />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-4">
+                <FormField
+                  control={form.control}
+                  name="recurrenceFrequency"
+                  render={({ field }) => (
+                    <FormItem className="sm:col-span-2">
+                      <FormLabel>Repetición</FormLabel>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger className="rounded-xl">
+                            <SelectValue placeholder="Selecciona" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {recurrenceOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                {recurrenceFrequency !== "none" ? (
+                  <>
+                    <FormField
+                      control={form.control}
+                      name="recurrenceInterval"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Intervalo</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              min={1}
+                              max={30}
+                              value={field.value ?? ""}
+                              onChange={(event) =>
+                                field.onChange(event.target.value ? Number(event.target.value) : undefined)
+                              }
+                              className="rounded-xl"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="recurrenceCount"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Repeticiones</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              min={1}
+                              max={60}
+                              value={field.value ?? ""}
+                              onChange={(event) =>
+                                field.onChange(event.target.value ? Number(event.target.value) : undefined)
+                              }
+                              className="rounded-xl"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="recurrenceUntil"
+                      render={({ field }) => (
+                        <FormItem className="sm:col-span-2">
+                          <FormLabel>Hasta</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="date"
+                              value={field.value ?? ""}
+                              onChange={(event) => field.onChange(event.target.value || undefined)}
+                              className="rounded-xl"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </>
+                ) : null}
+              </div>
+            </div>
+            {mode === "edit" && defaultEvent && onDuplicate ? (
               <Button
                 type="button"
                 variant="outline"
-                className="w-full"
-                onClick={() => onOpenChange(false)}
-                disabled={submitting}
+                className="w-full justify-center gap-2"
+                onClick={() => onDuplicate(defaultEvent)}
               >
+                Duplicar evento
+              </Button>
+            ) : null}
+            <DialogFooter className="mt-4 grid gap-3 sm:grid-cols-2">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="w-full">
                 Cancelar
               </Button>
               <Button type="submit" className="w-full" disabled={submitting}>
-                {submitting ? "Guardando..." : mode === "create" ? "Crear" : "Guardar"}
+                Guardar
               </Button>
             </DialogFooter>
           </form>

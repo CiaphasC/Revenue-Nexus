@@ -75,6 +75,22 @@ lib/
 - **`<Header />`**: navegación responsiva con tiles gradientes, prefetch progresivo y marca “Revenue Nexus”.
 - **`SolIcon`**: icono SVG personalizado con trazo en S/ reutilizado en métricas y feeds.
 
+## 📅 Calendario renovado
+
+- Vista mensual/semanal/diaria con virtualización (`react-virtuoso`) para mantener la experiencia fluida incluso con agendas densas.
+- Panel lateral adaptable: mini calendario, filtros avanzados por responsable/participante/rango de fechas y selector individual de calendarios.
+- Formularios accesibles con eventos recurrentes (diarios, semanales, mensuales), duplicado rápido y validación en servidor mediante Zod.
+- Indicador de hora actual en vistas semana/día, atajos de teclado (`N`, `T`, `←`, `→`) y contador en vivo de resultados filtrados.
+- Tema claro/oscuro integrado con `next-themes` y persistencia de preferencias de calendarios en `localStorage`.
+
+### Tests
+
+```bash
+npm run test
+```
+
+Las pruebas usan Jest + Testing Library con mocks para `react-virtuoso`, cubriendo filtros y navegación de vistas.
+
 ## 🛠️ Flujo de desarrollo recomendado
 
 - Ejecuta `npm run lint` antes de subir cambios.
