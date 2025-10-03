@@ -1,5 +1,7 @@
 "use client"
 
+import type { ReactNode } from "react"
+
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { CalendarClock, Copy, MapPin, Trash2, User, Users } from "lucide-react"
@@ -14,6 +16,7 @@ import {
 } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import type { CalendarEvent } from "@/lib/types"
 
 interface EventModalProps {
@@ -63,6 +66,40 @@ export function EventModal({ event, open, onOpenChange, onEdit, onDelete, onDupl
   const { dateText, hoursText } = formatSchedule(event)
   const attendees = event.attendees ?? []
   const recurrence = event.recurrence
+
+  const actionButtons: ReactNode[] = [
+    onDuplicate ? (
+      <Button
+        key="duplicate"
+        variant="outline"
+        className="w-full gap-2 border border-border/50"
+        onClick={() => onDuplicate(event)}
+      >
+        <Copy className="size-4" /> Duplicar
+      </Button>
+    ) : null,
+    (
+      <Button
+        key="delete"
+        variant="destructive"
+        className="w-full gap-2"
+        onClick={() => onDelete(event)}
+      >
+        <Trash2 className="size-4" /> Eliminar
+      </Button>
+    ),
+    (
+      <Button key="edit" className="w-full" onClick={() => onEdit(event)}>
+        Editar evento
+      </Button>
+    ),
+  ].filter((button): button is ReactNode => Boolean(button))
+
+  const gridColumnsClass = actionButtons.length >= 3
+    ? "sm:grid-cols-3"
+    : actionButtons.length === 2
+      ? "sm:grid-cols-2"
+      : undefined
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -139,24 +176,8 @@ export function EventModal({ event, open, onOpenChange, onEdit, onDelete, onDupl
             </div>
           ) : null}
         </div>
-        <DialogFooter className="mt-4 flex flex-col gap-2 sm:flex-row">
-          <Button
-            variant="outline"
-            className="w-full gap-2 border border-border/50"
-            onClick={() => onDuplicate?.(event)}
-          >
-            <Copy className="size-4" /> Duplicar
-          </Button>
-          <Button
-            variant="ghost"
-            className="w-full gap-2 border border-destructive/40 text-destructive hover:bg-destructive/10"
-            onClick={() => onDelete(event)}
-          >
-            <Trash2 className="size-4" /> Eliminar
-          </Button>
-          <Button className="w-full" onClick={() => onEdit(event)}>
-            Editar evento
-          </Button>
+        <DialogFooter className="mt-6">
+          <div className={cn("grid w-full gap-2", gridColumnsClass)}>{actionButtons}</div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
