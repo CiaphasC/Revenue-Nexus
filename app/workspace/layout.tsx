@@ -15,7 +15,7 @@ interface WorkspaceLayoutProps {
 
 export default function WorkspaceLayout({ children, crm, insights, modal }: WorkspaceLayoutProps) {
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-12 px-6 pb-16">
+    <div className="mx-auto w-full max-w-7xl space-y-12 px-4 pb-16">
       <section className="rounded-3xl border border-border/40 bg-gradient-to-br from-card via-card/60 to-card/30 px-8 py-10 text-foreground shadow-sm">
         <div className="flex flex-col gap-6">
           <div className="space-y-3">
