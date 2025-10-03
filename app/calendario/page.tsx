@@ -1,10 +1,13 @@
-import { CalendarView } from "@/components/calendar-view"
+import { Suspense } from "react"
+
 import { Calendar } from "lucide-react"
 
+import { CalendarClientView } from "@/components/calendar/calendar-client-view"
+import { LoadingCalendar } from "@/components/calendar/loading"
 import { getCalendarEvents } from "@/lib/server/workspace-data"
 
 export default async function CalendarioPage() {
-  const events = await getCalendarEvents()
+  const eventsPromise = getCalendarEvents()
 
   return (
     <main className="container mx-auto px-4 py-10">
@@ -23,7 +26,19 @@ export default async function CalendarioPage() {
         </div>
       </header>
 
-      <CalendarView initialEvents={events} />
+      <Suspense fallback={<LoadingCalendar />}>
+        <CalendarPageContent eventsPromise={eventsPromise} />
+      </Suspense>
     </main>
   )
+}
+
+async function CalendarPageContent({
+  eventsPromise,
+}: {
+  eventsPromise: ReturnType<typeof getCalendarEvents>
+}) {
+  const events = await eventsPromise
+
+  return <CalendarClientView initialEvents={events} />
 }

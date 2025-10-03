@@ -2,7 +2,7 @@
 
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
-import { CalendarClock, MapPin, Trash2, User, Users } from "lucide-react"
+import { CalendarClock, Copy, MapPin, Trash2, User, Users } from "lucide-react"
 
 import {
   Dialog,
@@ -22,6 +22,7 @@ interface EventModalProps {
   onOpenChange: (value: boolean) => void
   onEdit: (event: CalendarEvent) => void
   onDelete: (event: CalendarEvent) => void
+  onDuplicate?: (event: CalendarEvent) => void
 }
 
 function formatSchedule(event: CalendarEvent) {
@@ -37,13 +38,31 @@ function formatSchedule(event: CalendarEvent) {
   }
 }
 
-export function EventModal({ event, open, onOpenChange, onEdit, onDelete }: EventModalProps) {
+function recurrenceLabel(rule: NonNullable<CalendarEvent["recurrence"]>) {
+  const frequencyMap: Record<string, string> = {
+    daily: "Diaria",
+    weekly: "Semanal",
+    monthly: "Mensual",
+    none: "",
+  }
+  const frequency = frequencyMap[rule.frequency] ?? rule.frequency
+  if (rule.until) {
+    return `${frequency} hasta ${format(new Date(rule.until), "d MMMM yyyy", { locale: es })}`
+  }
+  if (rule.count) {
+    return `${frequency} (${rule.count} repeticiones)`
+  }
+  return frequency
+}
+
+export function EventModal({ event, open, onOpenChange, onEdit, onDelete, onDuplicate }: EventModalProps) {
   if (!event) {
     return null
   }
 
   const { dateText, hoursText } = formatSchedule(event)
   const attendees = event.attendees ?? []
+  const recurrence = event.recurrence
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -109,6 +128,11 @@ export function EventModal({ event, open, onOpenChange, onEdit, onDelete }: Even
               </div>
             </div>
           </div>
+          {recurrence && recurrence.frequency !== "none" ? (
+            <div className="rounded-xl border border-dashed border-chart-3/40 bg-chart-3/10 p-3 text-xs text-chart-3">
+              Evento recurrente: {recurrenceLabel(recurrence)}
+            </div>
+          ) : null}
           {event.owner ? (
             <div className="rounded-xl border border-dashed border-chart-2/40 bg-chart-2/10 p-3 text-sm text-chart-2">
               Responsable: <span className="font-medium text-chart-2/90">{event.owner}</span>
@@ -116,6 +140,13 @@ export function EventModal({ event, open, onOpenChange, onEdit, onDelete }: Even
           ) : null}
         </div>
         <DialogFooter className="mt-4 flex flex-col gap-2 sm:flex-row">
+          <Button
+            variant="outline"
+            className="w-full gap-2 border border-border/50"
+            onClick={() => onDuplicate?.(event)}
+          >
+            <Copy className="size-4" /> Duplicar
+          </Button>
           <Button
             variant="ghost"
             className="w-full gap-2 border border-destructive/40 text-destructive hover:bg-destructive/10"

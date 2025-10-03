@@ -8,7 +8,7 @@ import {
   updateCalendarEvent,
 } from "@/lib/server/workspace-store"
 import { emitWorkspaceEvent } from "@/lib/server/event-bus"
-import type { CalendarEvent } from "@/lib/types"
+import type { CalendarEvent, CalendarRecurrenceRule } from "@/lib/types"
 import {
   calendarEventSchema,
   type CalendarEventInput,
@@ -21,6 +21,21 @@ function ensureDateTimeString(value: Date) {
   const hours = String(value.getHours()).padStart(2, "0")
   const minutes = String(value.getMinutes()).padStart(2, "0")
   return `${year}-${month}-${day}T${hours}:${minutes}`
+}
+
+function normalizeRecurrence(rule?: CalendarRecurrenceRule) {
+  if (!rule || rule.frequency === "none") {
+    return undefined
+  }
+
+  const until = rule.until ? new Date(rule.until) : undefined
+
+  return {
+    frequency: rule.frequency,
+    interval: rule.interval && Number.isFinite(rule.interval) ? rule.interval : 1,
+    count: rule.count,
+    until: until ? ensureDateTimeString(until) : undefined,
+  }
 }
 
 function buildEventPayload(input: CalendarEventInput & { id: string }): CalendarEvent {
@@ -47,6 +62,7 @@ function buildEventPayload(input: CalendarEventInput & { id: string }): Calendar
     calendarId: input.calendarId,
     color: input.color,
     allDay: input.allDay ?? false,
+    recurrence: normalizeRecurrence(input.recurrence),
   }
 }
 
