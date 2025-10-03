@@ -18,7 +18,34 @@ function createInitialStore(): WorkspaceStore {
     deals: [...seedDeals],
     activities: [...seedActivities],
     kpis: [...seedKpis],
-    calendarEvents: [...seedCalendarEvents],
+    calendarEvents: seedCalendarEvents.map(normalizeCalendarEvent),
+  }
+}
+
+function ensureDateTimeString(value: Date) {
+  const year = value.getFullYear()
+  const month = String(value.getMonth() + 1).padStart(2, "0")
+  const day = String(value.getDate()).padStart(2, "0")
+  const hours = String(value.getHours()).padStart(2, "0")
+  const minutes = String(value.getMinutes()).padStart(2, "0")
+  return `${year}-${month}-${day}T${hours}:${minutes}`
+}
+
+function normalizeCalendarEvent(event: CalendarEvent): CalendarEvent {
+  const tentativeStart = event.start ?? `${event.date}T${event.time ?? "09:00"}`
+  const startDate = new Date(tentativeStart)
+  const endReference = event.end ? new Date(event.end) : new Date(startDate.getTime() + 60 * 60 * 1000)
+
+  const normalizedStart = ensureDateTimeString(startDate)
+  const normalizedEnd = ensureDateTimeString(endReference)
+
+  return {
+    ...event,
+    attendees: event.attendees ?? [],
+    start: normalizedStart,
+    end: normalizedEnd,
+    date: event.date ?? normalizedStart.slice(0, 10),
+    time: event.time ?? normalizedStart.slice(11, 16),
   }
 }
 
@@ -52,7 +79,29 @@ export function appendActivity(activity: Activity) {
 
 export function appendCalendarEvent(event: CalendarEvent) {
   const store = getWorkspaceStore()
-  store.calendarEvents = [event, ...store.calendarEvents].slice(0, 60)
+  const normalized = normalizeCalendarEvent(event)
+  const existingIndex = store.calendarEvents.findIndex((item) => item.id === normalized.id)
+
+  if (existingIndex >= 0) {
+    store.calendarEvents[existingIndex] = normalized
+  } else {
+    store.calendarEvents = [normalized, ...store.calendarEvents]
+  }
+}
+
+export function updateCalendarEvent(event: CalendarEvent) {
+  const store = getWorkspaceStore()
+  const normalized = normalizeCalendarEvent(event)
+  const index = store.calendarEvents.findIndex((item) => item.id === normalized.id)
+
+  if (index >= 0) {
+    store.calendarEvents[index] = normalized
+  }
+}
+
+export function deleteCalendarEvent(eventId: string) {
+  const store = getWorkspaceStore()
+  store.calendarEvents = store.calendarEvents.filter((event) => event.id !== eventId)
 }
 
 export function getDealById(dealId: string) {
@@ -73,5 +122,7 @@ export function listKPIs() {
 }
 
 export function listCalendarEvents() {
-  return getWorkspaceStore().calendarEvents
+  return getWorkspaceStore()
+    .calendarEvents.slice()
+    .sort((a, b) => a.start.localeCompare(b.start))
 }

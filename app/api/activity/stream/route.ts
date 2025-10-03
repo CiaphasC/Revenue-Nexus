@@ -34,6 +34,15 @@ function buildCalendarPayload(activity: Activity): CalendarEvent {
   const now = new Date()
   const date = now.toISOString().slice(0, 10)
   const time = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`
+  const end = new Date(now.getTime() + 45 * 60 * 1000)
+  const endTime = `${String(end.getHours()).padStart(2, "0")}:${String(end.getMinutes()).padStart(2, "0")}`
+
+  const calendarIdMap: Record<Activity["type"], string> = {
+    deal: "ventas",
+    meeting: "equipo",
+    email: "seguimiento",
+    call: "clientes",
+  }
 
   return {
     id: crypto.randomUUID(),
@@ -43,6 +52,10 @@ function buildCalendarPayload(activity: Activity): CalendarEvent {
     date,
     time,
     owner: activity.user,
+    start: `${date}T${time}`,
+    end: `${date}T${endTime}`,
+    organizer: activity.user,
+    calendarId: calendarIdMap[activity.type],
   }
 }
 
@@ -99,7 +112,10 @@ export async function GET() {
 
         const calendarEvent = buildCalendarPayload(activity)
         appendCalendarEvent(calendarEvent)
-        emitWorkspaceEvent({ kind: "calendar", payload: calendarEvent })
+        emitWorkspaceEvent({
+          kind: "calendar",
+          payload: { action: "created", event: calendarEvent },
+        })
       }, 10000)
     },
     cancel() {

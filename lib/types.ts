@@ -46,7 +46,22 @@ export interface CalendarEvent {
   type: Activity["type"]
   title: string
   description: string
+  /**
+   * Fecha base en formato YYYY-MM-DD para compatibilidad retro.
+   * Se deriva de start cuando está disponible.
+   */
   date: string
+  /** Hora de inicio en formato HH:mm (24h). */
   time?: string
   owner: string
+  /** Fecha y hora de inicio en ISO local (YYYY-MM-DDTHH:mm). */
+  start: string
+  /** Fecha y hora de fin en ISO local (YYYY-MM-DDTHH:mm). */
+  end: string
+  location?: string
+  attendees?: string[]
+  organizer?: string
+  calendarId?: string
+  color?: string
+  allDay?: boolean
 }

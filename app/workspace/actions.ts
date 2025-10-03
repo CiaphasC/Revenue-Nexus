@@ -3,7 +3,12 @@
 import { revalidatePath, revalidateTag } from "next/cache"
 import { z } from "zod"
 
-import { appendActivity, appendCalendarEvent, getDealById, upsertDeal } from "@/lib/server/workspace-store"
+import {
+  appendActivity,
+  appendCalendarEvent,
+  getDealById,
+  upsertDeal,
+} from "@/lib/server/workspace-store"
 import { formatCurrency as formatCurrencyIntl } from "@/lib/utils/format"
 import type { Activity, CalendarEvent, Deal } from "@/lib/types"
 import { STAGE_LABELS, stageProbability } from "@/lib/workspace/deals"
@@ -68,10 +73,17 @@ export async function createDealAction(formData: FormData) {
     date: data.closeDate,
     time: "09:00",
     owner: data.contact,
+    start: `${data.closeDate}T09:00`,
+    end: `${data.closeDate}T10:00`,
+    organizer: data.contact,
+    calendarId: "ventas",
   }
 
   appendCalendarEvent(calendarEvent)
-  emitWorkspaceEvent({ kind: "calendar", payload: calendarEvent })
+  emitWorkspaceEvent({
+    kind: "calendar",
+    payload: { action: "created", event: calendarEvent },
+  })
 
   revalidateTag("deals")
   revalidateTag("activities")
@@ -135,6 +147,10 @@ export async function updateDealStageAction(formData: FormData) {
   const formattedTime = `${String(milestoneTime.getHours()).padStart(2, "0")}:${String(
     milestoneTime.getMinutes(),
   ).padStart(2, "0")}`
+  const endTime = new Date(milestoneTime.getTime() + 45 * 60 * 1000)
+  const formattedEnd = `${String(endTime.getHours()).padStart(2, "0")}:${String(
+    endTime.getMinutes(),
+  ).padStart(2, "0")}`
 
   const calendarEvent: CalendarEvent = {
     id: crypto.randomUUID(),
@@ -144,10 +160,17 @@ export async function updateDealStageAction(formData: FormData) {
     date: formattedDate,
     time: formattedTime,
     owner: existing.contact,
+    start: `${formattedDate}T${formattedTime}`,
+    end: `${formattedDate}T${formattedEnd}`,
+    organizer: existing.contact,
+    calendarId: stage === "closed" ? "ventas" : "equipo",
   }
 
   appendCalendarEvent(calendarEvent)
-  emitWorkspaceEvent({ kind: "calendar", payload: calendarEvent })
+  emitWorkspaceEvent({
+    kind: "calendar",
+    payload: { action: "created", event: calendarEvent },
+  })
 
   revalidateTag("deals")
   revalidateTag("activities")
